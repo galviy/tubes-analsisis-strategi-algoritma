@@ -57,6 +57,7 @@ class Graph {
     }
 
     dfs(start, end) {
+        let iteration = 0;
         start = String(start);
         end = String(end);
 
@@ -84,13 +85,15 @@ class Graph {
                 return {
                     path: current.path,
                     totalLength: current.totalLength,
-                    explored: explored
+                    explored: explored,
+                    iterasi:iteration
                 };
             }
 
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
+                iteration++;
                 if (!visited.has(neighbors[i].id)) {
                     stack.push({
                         node: neighbors[i].id,
@@ -108,7 +111,7 @@ class Graph {
     bfs(start, end) {
         start = String(start);
         end = String(end);
-
+         let iteration = 0;
         const visited = new Set();
 
         const queue = [{
@@ -133,13 +136,15 @@ class Graph {
                 return {
                     path: current.path,
                     totalLength: current.totalLength,
-                    explored: explored
+                    explored: explored,
+                    iterasi: iteration
                 };
             }
 
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
+                iteration++;
                 if (!visited.has(neighbors[i].id)) {
                     queue.push({
                         node: neighbors[i].id,
@@ -153,17 +158,41 @@ class Graph {
 
         return null;
     }
-
     heuristic(a, b) {
-        const dx = a.lat - b.lat;
-        const dy = a.lon - b.lon;
 
-        return Math.sqrt(dx * dx + dy * dy);
+        const R = 6371000;
+
+        const lat1 = a.lat * Math.PI / 180;
+        const lat2 = b.lat * Math.PI / 180;
+
+        const dLat = (b.lat - a.lat) * Math.PI / 180;
+        const dLon = (b.lon - a.lon) * Math.PI / 180;
+
+        const x =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1) *
+            Math.cos(lat2) *
+            Math.sin(dLon / 2) ** 2;
+
+        const y = 2 * Math.atan2(
+            Math.sqrt(x),
+            Math.sqrt(1 - x)
+        );
+
+        return R * y;
     }
+
+   // heuristic(a, b) {
+     //   const dx = a.lat - b.lat;
+       /// const dy = a.lon - b.lon;
+
+        //return Math.sqrt(dx * dx + dy * dy);
+    //}
 
     aStar(start, end) {
         start = String(start);
         end = String(end);
+         let iteration = 0;
 
         const nodeMap = this.buildNodes();
 
@@ -201,13 +230,15 @@ class Graph {
                 return {
                     path: current.path,
                     totalLength: current.g,
-                    explored: explored
+                    explored: explored,
+                    iterasi: iteration
                 };
             }
 
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
+                iteration++;
                 const neighbor = neighbors[i];
 
                 if (visited.has(neighbor.id)) {
@@ -235,6 +266,7 @@ class Graph {
     gbfs(start, end) {
         start = String(start);
         end = String(end);
+         let iteration = 0;
 
         const nodeMap = this.buildNodes();
 
@@ -275,13 +307,15 @@ class Graph {
                 return {
                     path: current.path,
                     totalLength: current.totalLength,
-                    explored: explored
+                    explored: explored,
+                    iterasi: iteration
                 };
             }
 
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
+                iteration++;
                 const neighbor = neighbors[i];
 
                 if (!visited.has(neighbor.id)) {
@@ -307,6 +341,7 @@ class Graph {
     ucs(start, end) {
         start = String(start);
         end = String(end);
+         let iteration = 0;
 
         const open = [{
             node: start,
@@ -337,17 +372,20 @@ class Graph {
                 return {
                     path: current.path,
                     totalLength: current.cost,
-                    explored: explored
+                    explored: explored,
+                     iterasi: iteration
                 };
             }
 
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
+                iteration++;
                 const neighbor = neighbors[i];
                 const newCost = current.cost + neighbor.length;
 
-                if (bestCost[neighbor.id] === undefined ||newCost < bestCost[neighbor.id]) {
+                if (bestCost[neighbor.id] === undefined ||newCost < bestCost[neighbor.id]
+) {
                     bestCost[neighbor.id] = newCost;
 
                     open.push({
@@ -412,6 +450,7 @@ class Graph {
         };
     }
     dijkstra(start, end) {
+         let iteration = 0;
         start = String(start);
         end = String(end);
 
@@ -456,7 +495,7 @@ class Graph {
             const neighbors = this.#graph[current.node] || [];
 
             for (let i = 0; i < neighbors.length; i++) {
-
+                iteration++;
                 const neighbor = neighbors[i];
 
                 const newDistance =
@@ -490,7 +529,8 @@ class Graph {
         return {
             path: path,
             totalLength: dist[end],
-            explored: explored
+            explored: explored,
+             iterasi: iteration
         };
     }
 }
@@ -516,16 +556,14 @@ function compareAlgorithms(graph, start, end) {
         const green = "\x1b[32m";
         const magenta = "\x1b[35m";
         const reset = "\x1b[0m";
+        const red = '\x1b[31m';
 
-        console.log(`${cyan}${name.padEnd(8)}${reset} | ${yellow}Cost: ${result?.totalLength}${reset} | ${green}Expanded: ${result?.explored}${reset} | ${magenta}Path: ${result?.path?.length}${reset}`);
+        console.log(`${cyan}${name.padEnd(8)}${reset} | ${yellow}Cost: ${result?.totalLength}${reset} | ${green}Expanded: ${result?.explored}${reset} | ${magenta}Path: ${result?.path?.length}${reset}| ${red}Iterasi: ${result?.iterasi}${reset}`);
 
     }
 }
 
-const graph = new Graph('edges', 'nodes');
-
-compareAlgorithms(
-    graph,
-    '5592035559',
-    '1280164930'
-);
+module.exports = {
+    Graph,
+    compareAlgorithms
+};
